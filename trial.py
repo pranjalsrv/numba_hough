@@ -1,4 +1,4 @@
-from numba import jit, prange
+from numba import jit, prange, vectorize
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -6,7 +6,6 @@ import cv2
 import scipy.ndimage.filters as filters
 import scipy.ndimage as ndimage
 import time
-
 
 # ---------------------------------------------------------------------------------------- #
 # Step 1: read image
@@ -16,8 +15,9 @@ r_dim = 200
 theta_dim = 300
 theta_max = 1.0 * math.pi
 
+
 def read_img(img_path):
-    img = cv2.imread(img_path)  # pentagon.png
+    img = cv2.imread(img_path)
     # print('image shape: ', img.shape)
     # plt.imshow(img, )
     # plt.savefig("image1.png", bbox_inches='tight')
@@ -32,7 +32,6 @@ def read_img(img_path):
 
 @jit(nopython=True, parallel=True, fastmath=True)
 def create_hough_space_with_acc(img):
-
     x_max, y_max = img.shape
     r_max = math.hypot(x_max, y_max)
     hough_space = np.zeros((r_dim, theta_dim))
@@ -51,7 +50,6 @@ def create_hough_space_with_acc(img):
 
 
 def create_hough_space_without_acc(img):
-
     x_max, y_max = img.shape
 
     theta_max = 1.0 * math.pi
@@ -188,27 +186,26 @@ if __name__ == '__main__':
     print('\nFirst Iteration:')
     start = time.time()
     hough_space, r_dim, r_max, theta_dim, theta_max, y_max = create_hough_space_with_acc(gray)
-    #hough_end = time.time()
+    # hough_end = time.time()
     x, y = find_maxima(hough_space)
     maxima_end = time.time()
-    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "acc_it1.png")
+    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "images/acc_it1.png")
 
-    #print('time taken for hough space: ', (hough_end - start))
-    #print('time taken for finding maxima: ', (maxima_end - hough_end))
+    # print('time taken for hough space: ', (hough_end - start))
+    # print('time taken for finding maxima: ', (maxima_end - hough_end))
     print('overall time: ', (maxima_end - start))
 
     print('\nSecond Iteration:')
     start = time.time()
     hough_space, r_dim, r_max, theta_dim, theta_max, y_max = create_hough_space_with_acc(gray)
-    #hough_end = time.time()
+    # hough_end = time.time()
     x, y = find_maxima(hough_space)
     maxima_end = time.time()
-    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "acc_it2.png")
+    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "images/acc_it2.png")
 
-    #print('time taken for hough space: ', (hough_end - start))
-    #print('time taken for finding maxima: ', (maxima_end - hough_end))
+    # print('time taken for hough space: ', (hough_end - start))
+    # print('time taken for finding maxima: ', (maxima_end - hough_end))
     print('overall time: ', (maxima_end - start))
-
 
     acc_time = maxima_end - start
 
@@ -216,25 +213,25 @@ if __name__ == '__main__':
     print('\nFirst Iteration:')
     start = time.time()
     hough_space, r_dim, r_max, theta_dim, theta_max, y_max = create_hough_space_without_acc(gray)
-    #hough_end = time.time()
+    # hough_end = time.time()
     x, y = find_maxima(hough_space)
     maxima_end = time.time()
-    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "normal_it1.png")
+    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "images/normal_it1.png")
 
-    #print('time taken for hough space: ', (hough_end - start))
-    #print('time taken for finding maxima: ', (maxima_end - hough_end))
+    # print('time taken for hough space: ', (hough_end - start))
+    # print('time taken for finding maxima: ', (maxima_end - hough_end))
     print('overall time: ', (maxima_end - start))
 
     print('\nSecond Iteration:')
     start = time.time()
     hough_space, r_dim, r_max, theta_dim, theta_max, y_max = create_hough_space_without_acc(gray)
-    #hough_end = time.time()
+    # hough_end = time.time()
     x, y = find_maxima(hough_space)
     maxima_end = time.time()
-    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "normal_it2.png")
+    plot_line(x, y, r_max, r_dim, theta_dim, theta_max, y_max, img, "images/normal_it2.png")
 
-    #print('time taken for hough space: ', (hough_end - start))
-    #print('time taken for finding maxima: ', (maxima_end - hough_end))
+    # print('time taken for hough space: ', (hough_end - start))
+    # print('time taken for finding maxima: ', (maxima_end - hough_end))
     print('overall time: ', (maxima_end - start))
     without_acc_time = maxima_end - start
 
@@ -244,12 +241,16 @@ if __name__ == '__main__':
 
     print("\nFirst Iteration")
     start = time.time()
-    hough_transform_opencv(gray, "ocv_it1.png", img)
+    hough_transform_opencv(gray, "images/ocv_it1.png", img)
     end = time.time()
     print("Time taken: ", (end - start))
 
     print("\nSecond Iteration")
     start = time.time()
-    hough_transform_opencv(gray, "ocv_it2.png", img)
+    hough_transform_opencv(gray, "images/ocv_it2.png", img)
     end = time.time()
     print("Time taken: ", (end - start))
+
+    opencv_time = end - start
+
+    print("\nOpenCV Speedup: ", (acc_time/opencv_time))
